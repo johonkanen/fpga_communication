@@ -3,56 +3,24 @@ library ieee;
     use ieee.numeric_std.all;
 
     use work.fpga_interconnect_pkg.all;
-
-package communications_pkg is
-
-    type communications_clock_group is record
-        clock : std_logic;
-    end record;
-    
-    type communications_FPGA_input_group is record
-        uart_rx : std_logic;
-    end record;
-    
-    type communications_FPGA_output_group is record
-        uart_tx : std_logic;
-    end record;
-    
-    type communications_data_input_group is record
-        bus_in : fpga_interconnect_record;
-    end record;
-    
-    type communications_data_output_group is record
-        bus_out : fpga_interconnect_record;
-    end record;
-
-end package communications_pkg;
-    
-library ieee;
-    use ieee.std_logic_1164.all;
-    use ieee.numeric_std.all;
-
-    use work.communications_pkg.all;
-    use work.fpga_interconnect_pkg.all;
     use work.uart_protocol_pkg.all;
     use work.uart_rx_pkg.all;
     use work.uart_tx_pkg.all;
 
 entity communications is
     port (
-        communications_clocks   : in communications_clock_group;
-        communications_FPGA_in  : in communications_FPGA_input_group;
-        communications_FPGA_out : out communications_FPGA_output_group;
-        communications_data_in  : in communications_data_input_group;
-        communications_data_out : out communications_data_output_group
+        clock : in std_logic;
+        uart_rx : in std_logic;
+        uart_tx : in std_logic;
+        bus_to_communications : in fpga_interconnect_record;
+        bus_from_communications : out fpga_interconnect_record
     );
 end entity communications;
 
 architecture rtl of communications is
 
-    alias clock   is communications_clocks.clock;
-    alias bus_out is communications_data_out.bus_out;
-    alias bus_in  is communications_data_in.bus_in;
+    alias bus_in  is bus_to_communications;
+    alias bus_out is bus_from_communications;
 
     signal uart_rx_data_in  : uart_rx_data_input_group;
     signal uart_rx_data_out : uart_rx_data_output_group;
@@ -115,13 +83,13 @@ begin
 ------------------------------------------------------------------------
     u_uart_rx : entity work.uart_rx
     port map((clock => clock)                        ,
-         (uart_rx => communications_FPGA_in.uart_rx) ,
+         (uart_rx => uart_rx) ,
     	  uart_rx_data_in                            ,
     	  uart_rx_data_out); 
 ------------------------------------------------------------------------
     u_uart_tx : entity work.uart_tx
     port map((clock => clock)                                         ,
-          uart_tx_fpga_out.uart_tx => communications_FPGA_out.uart_tx ,
+          uart_tx_fpga_out.uart_tx => uart_tx ,
     	  uart_tx_data_in => uart_tx_data_in                          ,
     	  uart_tx_data_out => uart_tx_data_out);
 ------------------------------------------------------------------------
