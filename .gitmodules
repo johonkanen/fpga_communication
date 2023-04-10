@@ -1,0 +1,6 @@
+[submodule "hVHDL_uart"]
+	path = hVHDL_uart
+	url = https://github.com/hVHDL/hVHDL_uart.git
+[submodule "hVHDL_fpga_interconnect"]
+	path = hVHDL_fpga_interconnect
+	url = https://github.com/hVHDL/hVHDL_fpga_interconnect.git
