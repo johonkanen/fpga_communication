@@ -11,7 +11,7 @@ entity communications is
     port (
         clock : in std_logic;
         uart_rx : in std_logic;
-        uart_tx : in std_logic;
+        uart_tx : out std_logic;
         bus_to_communications : in fpga_interconnect_record;
         bus_from_communications : out fpga_interconnect_record
     );
