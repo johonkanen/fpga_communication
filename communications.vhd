@@ -32,6 +32,8 @@ architecture rtl of fpga_communications is
     signal number_of_registers_to_stream : integer range 0 to 2**23-1 := 0;
     signal stream_address : integer range 0 to 2**16-1 := 0;
 
+    signal fpga_controlled_stream_requested : boolean := false;
+
 begin
 
 ------------------------------------------------------------------------
@@ -59,13 +61,19 @@ begin
                         stream_address                <= get_command_address(uart_protocol);
                         request_data_from_address(bus_out, get_command_address(uart_protocol));
 
+                    WHEN request_stream_from_address =>
+                        number_of_registers_to_stream <= get_number_of_registers_to_stream(uart_protocol);
+                        fpga_controlled_stream_requested <= true;
+
                     WHEN others => -- do nothing
                 end CASE;
             end if;
 
             if number_of_registers_to_stream > 0 then
-                if transmit_is_ready(uart_protocol) then
-                    request_data_from_address(bus_out, stream_address);
+                if not fpga_controlled_stream_requested then
+                    if transmit_is_ready(uart_protocol) then
+                        request_data_from_address(bus_out, stream_address);
+                    end if;
                 end if;
 
                 if write_to_address_is_requested(bus_in, 0) then
@@ -73,6 +81,7 @@ begin
                     send_stream_data_packet(uart_protocol, get_data(bus_in));
                 end if;
             else
+                fpga_controlled_stream_requested <= false;
                 if write_to_address_is_requested(bus_in, 0) then
                     transmit_words_with_uart(uart_protocol, write_data_to_register(address => 0, data => get_data(bus_in)));
                 end if;
