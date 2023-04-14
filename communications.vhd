@@ -63,6 +63,7 @@ begin
                         fpga_controlled_stream_requested <= false;
 
                     WHEN request_stream_from_address =>
+                        request_data_from_address(bus_out, get_command_address(uart_protocol));
                         number_of_registers_to_stream <= get_number_of_registers_to_stream(uart_protocol);
                         fpga_controlled_stream_requested <= true;
 
