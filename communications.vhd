@@ -95,13 +95,13 @@ begin
     end process test_uart;	
 ------------------------------------------------------------------------
     u_uart_rx : entity work.uart_rx
-    port map((clock => clock) ,
-         (uart_rx => uart_rx) ,
-    	  uart_rx_data_in     ,
-    	  uart_rx_data_out); 
+    port map(clock => clock   ,
+          uart_rx_FPGA_in.uart_rx => uart_rx ,
+    	  uart_rx_data_in  => uart_rx_data_in     ,
+    	  uart_rx_data_out => uart_rx_data_out); 
 ------------------------------------------------------------------------
     u_uart_tx : entity work.uart_tx
-    port map((clock => clock)                 ,
+        port map(clock => clock               ,
           uart_tx_fpga_out.uart_tx => uart_tx ,
     	  uart_tx_data_in => uart_tx_data_in  ,
     	  uart_tx_data_out => uart_tx_data_out);
