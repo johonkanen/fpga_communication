@@ -2,23 +2,26 @@ library ieee;
     use ieee.std_logic_1164.all;
     use ieee.numeric_std.all;
 
-    use work.fpga_interconnect_pkg.all;
     use work.uart_protocol_pkg.all;
     use work.uart_rx_pkg.all;
     use work.uart_tx_pkg.all;
 
 entity fpga_communications is
+    generic(package fpga_interconnect_pkg is new work.fpga_interconnect_generic_pkg generic map(<>);
+            g_clock_divider : natural := 24);
+
     port (
         clock : in std_logic;
         uart_rx : in std_logic;
         uart_tx : out std_logic;
-        bus_to_communications : in fpga_interconnect_record;
-        bus_from_communications : out fpga_interconnect_record
+        bus_to_communications : in fpga_interconnect_pkg.fpga_interconnect_record;
+        bus_from_communications : out fpga_interconnect_pkg.fpga_interconnect_record
     );
 end entity fpga_communications;
 
 architecture rtl of fpga_communications is
 
+    use fpga_interconnect_pkg.all;
     alias bus_in  is bus_to_communications;
     alias bus_out is bus_from_communications;
 
@@ -42,9 +45,9 @@ begin
     begin
         if rising_edge(clock) then
 
-            init_uart(uart_tx_data_in, 24);
             init_bus(bus_out);
-            set_number_of_clocks_per_bit(uart_rx_data_in, 24);
+            init_uart(uart_tx_data_in, g_clock_divider);
+            set_number_of_clocks_per_bit(uart_rx_data_in, g_clock_divider);
             create_uart_protocol(uart_protocol, uart_rx_data_out, uart_tx_data_in, uart_tx_data_out);
 
             ------------------------------------------------------------------------
