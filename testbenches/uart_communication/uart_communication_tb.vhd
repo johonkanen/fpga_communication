@@ -27,10 +27,10 @@ architecture vunit_simulation of uart_communication_tb is
     signal bus_in  : fpga_interconnect_record := init_fpga_interconnect;
     signal bus_out  : fpga_interconnect_record := init_fpga_interconnect;
 
-    signal uart_rx_data_in  : uart_rx_data_input_group;
+    signal uart_rx_data_in  : uart_rx_data_input_group := (number_of_clocks_per_bit => 24);
     signal uart_rx_data_out : uart_rx_data_output_group;
 
-    signal uart_tx_data_in    : uart_tx_data_input_group;
+    signal uart_tx_data_in    : uart_tx_data_input_group := init_uart_tx(24);
     signal uart_tx_data_out   : uart_tx_data_output_group;
     signal uart_protocol : serial_communcation_record := init_serial_communcation;
 
