@@ -30,7 +30,7 @@ architecture rtl of fpga_communications is
 
     signal uart_tx_data_in    : uart_tx_data_input_group;
     signal uart_tx_data_out   : uart_tx_data_output_group;
-    signal uart_protocol : uart_communcation_record := init_uart_communcation;
+    signal uart_protocol : serial_communcation_record := init_serial_communcation;
 
     signal number_of_registers_to_stream : integer range 0 to 2**23-1 := 0;
     signal stream_address : integer range 0 to 2**16-1 := 0;
@@ -48,7 +48,7 @@ begin
             init_bus(bus_out);
             init_uart(uart_tx_data_in, g_clock_divider);
             set_number_of_clocks_per_bit(uart_rx_data_in, g_clock_divider);
-            create_uart_protocol(uart_protocol, uart_rx_data_out, uart_tx_data_in, uart_tx_data_out);
+            create_serial_protocol(uart_protocol, uart_rx_data_out, uart_tx_data_in, uart_tx_data_out);
 
             ------------------------------------------------------------------------
             if frame_has_been_received(uart_protocol) then
