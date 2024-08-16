@@ -18,14 +18,12 @@ end;
 architecture vunit_simulation of uart_communication_tb is
 
     constant clock_period      : time    := 1 ns;
-    constant simtime_in_clocks : integer := 5000;
+    constant simtime_in_clocks : integer := 7000;
     
     signal simulator_clock     : std_logic := '0';
     signal simulation_counter  : natural   := 0;
     -----------------------------------
     -- simulation specific signals ----
-    signal bus_in  : fpga_interconnect_record := init_fpga_interconnect;
-    signal bus_out  : fpga_interconnect_record := init_fpga_interconnect;
 
     signal uart_rx_data_in  : uart_rx_data_input_group := (number_of_clocks_per_bit => 24);
     signal uart_rx_data_out : uart_rx_data_output_group;
@@ -46,8 +44,18 @@ architecture vunit_simulation of uart_communication_tb is
     constant g_clock_divider : integer := 24;
 
 
-    signal uart_rx : std_logic;
+    signal uart_rx : std_logic := '1';
     signal uart_tx : std_logic;
+
+    type std16_array is array (natural range <>) of std_logic_vector(15 downto 0);
+    signal test_data : std16_array(1 to 5) := (others => (others => '1'));
+
+    signal tuitui : std_logic_vector(15 downto 0) := (others => '0');
+
+    signal transmit_counter : natural := 1;
+
+    constant data_to_be_transmitted : std16_array :=(1 => x"acdc", 2 => x"abcd", 3=> x"1234", 4=>  x"1111", 5 => x"0101");
+    constant data_to_be_transmitted_x : std16_array :=(1 => x"acdc", 2 => x"abcd", 3=> x"1234", 4=>  x"1111", 5 => x"0100");
 
 begin
 
@@ -56,6 +64,7 @@ begin
     begin
         test_runner_setup(runner, runner_cfg);
         wait for simtime_in_clocks*clock_period;
+        check(data_to_be_transmitted = test_data, "words were not the same");
         test_runner_cleanup(runner); -- Simulation ends here
         wait;
     end process simtime;	
@@ -65,59 +74,50 @@ begin
 
     test_uart : process(simulator_clock)
 
+        function create_write_frame
+        (
+            address : natural;
+            data : std_logic_vector(15 downto 0)
+        )
+        return base_array
+        is
+            variable retval : base_array(0 to 4);
+        begin
+            retval(0) := std_logic_vector'(x"04");
+            retval(1 to 2) := int_to_bytes(address);
+            retval(3 to 4) := (data(15 downto 8), data(7 downto 0));
+
+            return retval;
+        end create_write_frame;
+
     begin
         if rising_edge(simulator_clock) then
             simulation_counter <= simulation_counter + 1;
 
-            init_bus(bus_out);
             init_uart(uart_tx_data_in, g_clock_divider);
             set_number_of_clocks_per_bit(uart_rx_data_in, g_clock_divider);
             create_serial_protocol(uart_protocol, uart_rx_data_out, uart_tx_data_in, uart_tx_data_out);
 
-            ------------------------------------------------------------------------
-            if frame_has_been_received(uart_protocol) then
-                CASE get_command(uart_protocol) is
-                    WHEN read_is_requested_from_address_from_uart =>
-                        request_data_from_address(bus_out, get_command_address(uart_protocol));
-
-                    WHEN write_to_address_is_requested_from_uart =>
-                        write_data_to_address(bus_out, get_command_address(uart_protocol), get_command_data(uart_protocol));
-
-                    WHEN stream_data_from_address =>
-                        number_of_registers_to_stream <= get_number_of_registers_to_stream(uart_protocol);
-                        stream_address                <= get_command_address(uart_protocol);
-                        request_data_from_address(bus_out, get_command_address(uart_protocol));
-                        fpga_controlled_stream_requested <= false;
-
-                    WHEN request_stream_from_address =>
-                        request_data_from_address(bus_out, get_command_address(uart_protocol));
-                        number_of_registers_to_stream <= get_number_of_registers_to_stream(uart_protocol);
-                        fpga_controlled_stream_requested <= true;
-
-                    WHEN others => -- do nothing
-                end CASE;
+            if simulation_counter = 10 then
             end if;
 
-            if number_of_registers_to_stream > 0 then
-                if not fpga_controlled_stream_requested then
-                    if transmit_is_ready(uart_protocol) then
-                        request_data_from_address(bus_out, stream_address);
-                    end if;
-                end if;
-
-                if write_to_address_is_requested(bus_in, 0) then
-                    number_of_registers_to_stream <= number_of_registers_to_stream - 1;
-                    send_stream_data_packet(uart_protocol, get_data(bus_in));
-                    if number_of_registers_to_stream = 1 then
-                        fpga_controlled_stream_requested <= false;
-                    end if;
-                end if;
-            else
-                if write_to_address_is_requested(bus_in, 0) then
-                    transmit_words_with_uart(uart_protocol, write_data_to_register(address => 0, data => get_data(bus_in)));
+            if transmit_is_ready(uart_protocol) or simulation_counter = 10 then
+                transmit_counter <= transmit_counter + 1;
+                if transmit_counter <= data_to_be_transmitted'high then
+                    transmit_words_with_uart(uart_protocol, create_write_frame(transmit_counter, data_to_be_transmitted(transmit_counter)));
                 end if;
             end if;
-            
+
+
+            ---- bus from commun
+            init_bus(bus_to_communications);
+            connect_data_to_address(bus_from_communications, bus_to_communications, 1, test_data(1));
+            connect_data_to_address(bus_from_communications, bus_to_communications, 2, test_data(2));
+            connect_data_to_address(bus_from_communications, bus_to_communications, 3, test_data(3));
+            connect_data_to_address(bus_from_communications, bus_to_communications, 4, test_data(4));
+            connect_data_to_address(bus_from_communications, bus_to_communications, 5, test_data(5));
+            connect_data_to_address(bus_from_communications, bus_to_communications, 5, tuitui);
+
         end if; -- rising_edge
     end process test_uart;	
 ------------------------------------------------------------------------
@@ -137,8 +137,8 @@ begin
     generic map(fpga_interconnect_pkg => work.fpga_interconnect_pkg)
         port map(
             clock => simulator_clock                              ,
-            uart_rx                 => uart_rx               ,
-            uart_tx                 => uart_tx               ,
+            uart_rx                 => uart_tx               ,
+            uart_tx                 => uart_rx               ,
             bus_to_communications   => bus_to_communications ,
             bus_from_communications => bus_from_communications
         );

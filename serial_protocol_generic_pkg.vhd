@@ -84,6 +84,9 @@ package serial_protocol_generic_pkg is
     function int24_to_bytes ( number : integer)
         return base_array;
 ------------------------------------------------------------------------
+    function int_to_bytes ( number : integer)
+        return base_array;
+------------------------------------------------------------------------
 
 end package serial_protocol_generic_pkg;
 
@@ -173,11 +176,9 @@ package body serial_protocol_generic_pkg is
         data_words_in : base_array 
     ) is
     begin
-        self.number_of_transmitted_words <= data_words_in'length+1;
-
-        self.transmit_buffer(0) <= std_logic_vector(to_unsigned(data_words_in'length, 8));
-        for i in 1 to data_words_in'high+1 loop
-            self.transmit_buffer(i) <= data_words_in(i-1);
+        self.number_of_transmitted_words <= data_words_in'length;
+        for i in 0 to data_words_in'high loop
+            self.transmit_buffer(i) <= data_words_in(i);
         end loop;
         self.is_requested <= true;
         
