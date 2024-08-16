@@ -18,7 +18,7 @@ end;
 architecture vunit_simulation of uart_communication_tb is
 
     constant clock_period      : time    := 1 ns;
-    constant simtime_in_clocks : integer := 7000;
+    constant simtime_in_clocks : integer := 15000;
     
     signal simulator_clock     : std_logic := '0';
     signal simulation_counter  : natural   := 0;
@@ -74,7 +74,7 @@ begin
 
     test_uart : process(simulator_clock)
 
-        function create_write_frame
+        function write_frame
         (
             address : natural;
             data : std_logic_vector(15 downto 0)
@@ -88,7 +88,21 @@ begin
             retval(3 to 4) := (data(15 downto 8), data(7 downto 0));
 
             return retval;
-        end create_write_frame;
+        end write_frame;
+
+        function read_frame
+        (
+            address : natural
+        )
+        return base_array
+        is
+            variable retval : base_array(0 to 2);
+        begin
+            retval(0) := std_logic_vector'(x"02");
+            retval(1 to 2) := int_to_bytes(address);
+
+            return retval;
+        end read_frame;
 
     begin
         if rising_edge(simulator_clock) then
@@ -104,12 +118,18 @@ begin
             if transmit_is_ready(uart_protocol) or simulation_counter = 10 then
                 transmit_counter <= transmit_counter + 1;
                 if transmit_counter <= data_to_be_transmitted'high then
-                    transmit_words_with_uart(uart_protocol, create_write_frame(transmit_counter, data_to_be_transmitted(transmit_counter)));
+                    transmit_words_with_uart(uart_protocol, write_frame(transmit_counter, data_to_be_transmitted(transmit_counter)));
+                elsif transmit_counter <= data_to_be_transmitted'high+1 then
+                    transmit_words_with_uart(uart_protocol, read_frame(address => 1));
+                end if;
+            end if;
+            if frame_has_been_received(uart_protocol) then
+                if get_command(uart_protocol) = 2 then
+                    transmit_words_with_uart(uart_protocol,write_frame(get_command_address(uart_protocol), test_data(3)));
                 end if;
             end if;
 
 
-            ---- bus from commun
             init_bus(bus_to_communications);
             connect_data_to_address(bus_from_communications, bus_to_communications, 1, test_data(1));
             connect_data_to_address(bus_from_communications, bus_to_communications, 2, test_data(2));
