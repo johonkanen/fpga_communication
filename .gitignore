@@ -6,3 +6,6 @@ temp/
 *.cf
 *.swo
 *.o
+vunit_out/
+*.fst*.*
+*.fst
