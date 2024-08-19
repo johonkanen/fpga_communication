@@ -9,12 +9,12 @@ package serial_protocol_generic_pkg is
              --------------------------------
              function serial_rx_data_is_ready(self : serial_rx_data_output_record) return boolean is <>;
              function get_serial_rx_data(self : serial_rx_data_output_record) return std_logic_vector is <>;
-             procedure init_uart(signal self : out serial_tx_data_input_record) is <>;
+             procedure init_serial(signal self : out serial_tx_data_input_record) is <>;
              procedure transmit_8bit_data_package(signal self : out serial_tx_data_input_record; input : std_logic_vector) is <>;
              function serial_tx_is_ready(self : serial_tx_data_output_record) return boolean is <>);
 
-    constant read_is_requested_from_address_from_uart : integer := 2;
-    constant write_to_address_is_requested_from_uart  : integer := 4;
+    constant read_is_requested_from_address_from_serial : integer := 2;
+    constant write_to_address_is_requested_from_serial  : integer := 4;
     constant stream_data_from_address                 : integer := 5;
     constant request_stream_from_address              : integer := 6;
 
@@ -44,7 +44,7 @@ package serial_protocol_generic_pkg is
         signal serial_tx_in : out serial_tx_data_input_record;
         serial_tx_out       : in serial_tx_data_output_record);
 ------------------------------------------------------------------------
-    procedure transmit_words_with_uart (
+    procedure transmit_words_with_serial (
         signal self : out serial_communcation_record;
         data_words_in : base_array );
 
@@ -113,7 +113,7 @@ package body serial_protocol_generic_pkg is
     ) is
         variable serial_protocol_header : integer;
     begin
-        init_uart(serial_tx_in);
+        init_serial(serial_tx_in);
         
         self.is_ready <= false;
         self.is_requested <= false;
@@ -152,8 +152,8 @@ package body serial_protocol_generic_pkg is
             else
                 serial_protocol_header := get_serial_rx_data(serial_rx);
                 CASE serial_protocol_header is
-                    WHEN read_is_requested_from_address_from_uart => self.number_of_received_words <= 2;
-                    WHEN write_to_address_is_requested_from_uart  => self.number_of_received_words <= 4;
+                    WHEN read_is_requested_from_address_from_serial => self.number_of_received_words <= 2;
+                    WHEN write_to_address_is_requested_from_serial  => self.number_of_received_words <= 4;
                     WHEN stream_data_from_address                 => self.number_of_received_words <= 5;
                     WHEN request_stream_from_address              => self.number_of_received_words <= 5;
                     WHEN others => self.number_of_received_words <= get_serial_rx_data(serial_rx) mod 8;
@@ -170,7 +170,7 @@ package body serial_protocol_generic_pkg is
     end create_serial_protocol;
 
 ------------------------------------------------------------------------
-    procedure transmit_words_with_uart
+    procedure transmit_words_with_serial
     (
         signal self : out serial_communcation_record;
         data_words_in : base_array 
@@ -182,7 +182,7 @@ package body serial_protocol_generic_pkg is
         end loop;
         self.is_requested <= true;
         
-    end transmit_words_with_uart;
+    end transmit_words_with_serial;
 ------------------------------------------------------------------------
     procedure send_stream_data_packet
     (

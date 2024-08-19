@@ -118,14 +118,14 @@ begin
             if transmit_is_ready(uart_protocol) or simulation_counter = 10 then
                 transmit_counter <= transmit_counter + 1;
                 if transmit_counter <= data_to_be_transmitted'high then
-                    transmit_words_with_uart(uart_protocol, write_frame(transmit_counter, data_to_be_transmitted(transmit_counter)));
+                    transmit_words_with_serial(uart_protocol, write_frame(transmit_counter, data_to_be_transmitted(transmit_counter)));
                 elsif transmit_counter <= data_to_be_transmitted'high+1 then
-                    transmit_words_with_uart(uart_protocol, read_frame(address => 1));
+                    transmit_words_with_serial(uart_protocol, read_frame(address => 1));
                 end if;
             end if;
             if frame_has_been_received(uart_protocol) then
                 if get_command(uart_protocol) = 2 then
-                    transmit_words_with_uart(uart_protocol,write_frame(get_command_address(uart_protocol), test_data(3)));
+                    transmit_words_with_serial(uart_protocol,write_frame(get_command_address(uart_protocol), test_data(3)));
                 end if;
             end if;
 

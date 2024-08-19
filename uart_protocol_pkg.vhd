@@ -10,7 +10,7 @@ package uart_protocol_pkg is new work.serial_protocol_generic_pkg
                 --------------------------------
                 get_serial_rx_data => get_uart_rx_data,
                 --------------------------------
-                init_uart => init_uart,
+                init_serial => init_uart,
                 --------------------------------
                 transmit_8bit_data_package => transmit_8bit_data_package,
                 --------------------------------

@@ -53,10 +53,10 @@ begin
             ------------------------------------------------------------------------
             if frame_has_been_received(uart_protocol) then
                 CASE get_command(uart_protocol) is
-                    WHEN read_is_requested_from_address_from_uart =>
+                    WHEN read_is_requested_from_address_from_serial =>
                         request_data_from_address(bus_out, get_command_address(uart_protocol));
 
-                    WHEN write_to_address_is_requested_from_uart =>
+                    WHEN write_to_address_is_requested_from_serial =>
                         write_data_to_address(bus_out, get_command_address(uart_protocol), get_command_data(uart_protocol));
 
                     WHEN stream_data_from_address =>
@@ -90,7 +90,7 @@ begin
                 end if;
             else
                 if write_to_address_is_requested(bus_in, 0) then
-                    transmit_words_with_uart(uart_protocol, write_data_to_register(address => 0, data => get_data(bus_in)));
+                    transmit_words_with_serial(uart_protocol, write_data_to_register(address => 0, data => get_data(bus_in)));
                 end if;
             end if;
             
