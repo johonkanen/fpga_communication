@@ -39,7 +39,7 @@ package serial_protocol_generic_pkg is
 
 ------------------------------------------------------------------------
     procedure create_serial_protocol (
-        signal self       : inout serial_communcation_record;
+        signal self         : inout serial_communcation_record;
         serial_rx           : in serial_rx_data_output_record;
         signal serial_tx_in : out serial_tx_data_input_record;
         serial_tx_out       : in serial_tx_data_output_record);
@@ -48,6 +48,12 @@ package serial_protocol_generic_pkg is
         signal self : out serial_communcation_record;
         data_words_in : base_array );
 
+------------------------------------------------------------------------
+    procedure respond_to_data_request (
+        signal self : out serial_communcation_record;
+        data_words_in : base_array );
+
+------------------------------------------------------------------------
     function frame_has_been_received ( self : serial_communcation_record)
         return boolean;
 
@@ -106,7 +112,7 @@ package body serial_protocol_generic_pkg is
 ------------------------------------------------------------------------
     procedure create_serial_protocol
     (
-        signal self : inout serial_communcation_record;
+        signal self         : inout serial_communcation_record;
         serial_rx           : in serial_rx_data_output_record;
         signal serial_tx_in : out serial_tx_data_input_record;
         serial_tx_out       : in serial_tx_data_output_record
@@ -183,6 +189,22 @@ package body serial_protocol_generic_pkg is
         self.is_requested <= true;
         
     end transmit_words_with_serial;
+
+    procedure respond_to_data_request
+    (
+        signal self : out serial_communcation_record;
+        data_words_in : base_array 
+    ) is
+    begin
+        self.number_of_transmitted_words <= data_words_in'length+1;
+
+        self.transmit_buffer(0) <= std_logic_vector(to_unsigned(data_words_in'length, 8));
+        for i in 1 to data_words_in'high+1 loop
+            self.transmit_buffer(i) <= data_words_in(i-1);
+        end loop;
+        self.is_requested <= true;
+    end respond_to_data_request;
+        
 ------------------------------------------------------------------------
     procedure send_stream_data_packet
     (

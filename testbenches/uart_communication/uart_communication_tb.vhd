@@ -55,7 +55,6 @@ architecture vunit_simulation of uart_communication_tb is
     signal transmit_counter : natural := 1;
 
     constant data_to_be_transmitted : std16_array :=(1 => x"acdc", 2 => x"abcd", 3=> x"1234", 4=>  x"1111", 5 => x"0101");
-    constant data_to_be_transmitted_x : std16_array :=(1 => x"acdc", 2 => x"abcd", 3=> x"1234", 4=>  x"1111", 5 => x"0100");
 
 begin
 
@@ -104,6 +103,21 @@ begin
             return retval;
         end read_frame;
 
+        function stream_frame
+        (
+            address : natural
+        )
+        return base_array
+        is
+            variable retval : base_array(0 to 5);
+        begin
+            retval(0) := std_logic_vector'(x"05");
+            retval(1 to 2) := int_to_bytes(address);
+            retval(3 to 5) := (x"00", x"00", x"01");
+
+            return retval;
+        end stream_frame;
+
     begin
         if rising_edge(simulator_clock) then
             simulation_counter <= simulation_counter + 1;
@@ -127,6 +141,10 @@ begin
                 if get_command(uart_protocol) = 2 then
                     transmit_words_with_serial(uart_protocol,write_frame(get_command_address(uart_protocol), test_data(3)));
                 end if;
+            end if;
+
+            if simulation_counter = 8500 then
+                    transmit_words_with_serial(uart_protocol,stream_frame(5));
             end if;
 
 

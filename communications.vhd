@@ -90,7 +90,7 @@ begin
                 end if;
             else
                 if write_to_address_is_requested(bus_in, 0) then
-                    transmit_words_with_serial(uart_protocol, write_data_to_register(address => 0, data => get_data(bus_in)));
+                    respond_to_data_request(uart_protocol, write_data_to_register(address => 0, data => get_data(bus_in)));
                 end if;
             end if;
             
