@@ -7,3 +7,6 @@
 [submodule "fpga_uart_pc_software"]
 	path = fpga_uart_pc_software
 	url = https://github.com/johonkanen/fpga_uart_pc_software.git
+[submodule "vhdl_serial"]
+	path = vhdl_serial
+	url = https://github.com/johonkanen/vhdl_serial.git
