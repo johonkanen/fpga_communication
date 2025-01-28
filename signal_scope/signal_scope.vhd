@@ -4,10 +4,11 @@ library ieee;
     use ieee.numeric_std.all;
 
 entity signal_scope is
-    generic(g_ram_bit_width : positive
-            ;g_ram_depth_pow2 : positive
+    generic(g_ram_bit_width    : positive
+            ;g_ram_depth_pow2  : positive
             ;g_trigger_address : positive := 1000
-            ;g_data_address : positive := 1001
+            ;g_data_address    : positive := 1001
+            ;g_samples_after_trigger_address : positive := 1002
            );
     port (
       main_clock              : in std_logic
@@ -34,6 +35,8 @@ architecture rtl of signal_scope is
     use scope_ram_port_pkg.all;
     use scope_sample_trigger_pkg.all;
 
+    signal samples_after_trigger : natural range 0 to ram_depth-1 := ram_depth/2;
+
     procedure create_scope(
       signal trigger          : inout sample_trigger_record
       ; bus_in                : in fpga_interconnect_record
@@ -56,7 +59,7 @@ architecture rtl of signal_scope is
 
         if data_is_requested_from_address(bus_in, g_trigger_address) then
             write_data_to_address(bus_out, address => 0, data => 3);
-            prime_trigger(trigger, ram_depth/2);
+            prime_trigger(trigger, samples_after_trigger);
         end if;
         
         if data_is_requested_from_address(bus_in, g_data_address) then
@@ -77,8 +80,6 @@ architecture rtl of signal_scope is
     signal ram_b_in  : ram_in_record;
     signal ram_b_out : ram_out_record;
 
-    constant init_values : ram_array := (others => (3 => '1' , others=> '0'));
-
 begin
 
     process(main_clock) is
@@ -87,6 +88,8 @@ begin
             init_ram(ram_a_in);
             init_ram(ram_b_in);
             init_bus(bus_from_signal_scope);
+
+            connect_data_to_address(bus_in, bus_from_signal_scope, g_samples_after_trigger_address, samples_after_trigger);
 
             create_scope(sample_trigger
             , bus_in
@@ -103,7 +106,7 @@ begin
     end process;
 
     u_dpram : entity work.generic_dual_port_ram
-    generic map(scope_ram_port_pkg, init_values)
+    generic map(scope_ram_port_pkg)
     port map(
     main_clock ,
     ram_a_in   ,
