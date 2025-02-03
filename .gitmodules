@@ -10,3 +10,6 @@
 [submodule "vhdl_serial"]
 	path = vhdl_serial
 	url = https://github.com/johonkanen/vhdl_serial.git
+[submodule "hw/vhdl_sources/submodules/hVHDL_memory_library"]
+	path = hVHDL_memory_library
+	url = https://github.com/hVHDL/hVHDL_memory_library
