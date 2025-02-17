@@ -3,9 +3,10 @@ LIBRARY ieee  ;
     USE ieee.std_logic_1164.all  ; 
     USE ieee.numeric_std.all  ; 
 
-    use work.uart_protocol_pkg.all;
+package serial_protocol_generic_test_pkg is
+    generic(package serial_pkg is new work.serial_protocol_generic_pkg generic map(<>));
 
-package uart_protocol_test_pkg is
+    use serial_pkg.all;
 
     function write_frame (
         address : natural;
@@ -23,9 +24,9 @@ package uart_protocol_test_pkg is
     function stream_frame ( address : natural)
         return base_array;
 
-end package uart_protocol_test_pkg;
+end package serial_protocol_generic_test_pkg;
 
-package body uart_protocol_test_pkg is
+package body serial_protocol_generic_test_pkg is
 
     function write_frame
     (
@@ -88,4 +89,3 @@ package body uart_protocol_test_pkg is
     end stream_frame;
 
 end package body;
-
