@@ -10,7 +10,7 @@ package serial_protocol_generic_test_pkg is
 
     function write_frame (
         address : natural;
-        data : std_logic_vector(15 downto 0))
+        data : std_logic_vector)
     return base_array;
 
     function read_frame ( address : natural)
@@ -31,7 +31,7 @@ package body serial_protocol_generic_test_pkg is
     function write_frame
     (
         address : natural;
-        data : std_logic_vector(15 downto 0)
+        data : std_logic_vector
     )
     return base_array
     is
@@ -70,9 +70,10 @@ package body serial_protocol_generic_test_pkg is
     begin
         retval(0) := std_logic_vector'(x"05");
         retval(1 to 2) := int_to_bytes(address);
-        retval(3 to 5) := (3 => std_length(23 downto 16)
-                        , 4 => std_length(15 downto 8)
-                        , 5 =>std_length(7 downto 0)
+        retval(3 to 5) := (
+                            3 => std_length(23 downto 16)
+                          , 4 => std_length(15 downto 8)
+                          , 5 => std_length(7 downto 0)
                         );
 
         return retval;
