@@ -3,24 +3,27 @@ library ieee;
     use ieee.numeric_std.all;
 
 package serial_protocol_generic_pkg is
-    generic (type serial_rx_data_output_record;
-             type serial_tx_data_input_record;
-             type serial_tx_data_output_record;
+    generic (type serial_rx_data_output_record
+              ; type serial_tx_data_input_record
+              ; type serial_tx_data_output_record
              --------------------------------
-             function serial_rx_data_is_ready(self : serial_rx_data_output_record) return boolean is <>;
-             function get_serial_rx_data(self : serial_rx_data_output_record) return std_logic_vector is <>;
-             procedure init_serial(signal self : out serial_tx_data_input_record) is <>;
-             procedure transmit_8bit_data_package(signal self : out serial_tx_data_input_record; input : std_logic_vector) is <>;
-             function serial_tx_is_ready(self : serial_tx_data_output_record) return boolean is <>
+              ; function serial_rx_data_is_ready(self : serial_rx_data_output_record) return boolean is <>
+              ; function get_serial_rx_data(self : serial_rx_data_output_record) return std_logic_vector is <>
+              ; procedure init_serial(signal self : out serial_tx_data_input_record) is <>
+              ; procedure transmit_8bit_data_package(signal self : out serial_tx_data_input_record ; input : std_logic_vector) is <>
+              ; function serial_tx_is_ready(self : serial_tx_data_output_record) return boolean is <>
              --------------------------------
-             constant g_data_bit_width    : natural := 16;
-             constant g_address_bit_width : natural := 16;
+           ; constant g_data_bit_width    : natural := 16
+           ; constant g_address_bit_width : natural := 16
          );
 
     constant read_is_requested_from_address_from_serial : integer := 2;
     constant write_to_address_is_requested_from_serial  : integer := 4;
     constant stream_data_from_address                   : integer := 5;
     constant request_stream_from_address                : integer := 6;
+
+    constant number_of_address_bytes : natural := g_address_bit_width/8;
+    constant number_of_data_bytes    : natural := g_data_bit_width/8;
 
     type base_array is array (natural range <>) of std_logic_vector(7 downto 0);
     subtype memory_array is base_array(0 to 7);
