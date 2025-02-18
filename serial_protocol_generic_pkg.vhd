@@ -11,12 +11,16 @@ package serial_protocol_generic_pkg is
              function get_serial_rx_data(self : serial_rx_data_output_record) return std_logic_vector is <>;
              procedure init_serial(signal self : out serial_tx_data_input_record) is <>;
              procedure transmit_8bit_data_package(signal self : out serial_tx_data_input_record; input : std_logic_vector) is <>;
-             function serial_tx_is_ready(self : serial_tx_data_output_record) return boolean is <>);
+             function serial_tx_is_ready(self : serial_tx_data_output_record) return boolean is <>
+             --------------------------------
+             constant g_data_bit_width    : natural := 16;
+             constant g_address_bit_width : natural := 16;
+         );
 
     constant read_is_requested_from_address_from_serial : integer := 2;
     constant write_to_address_is_requested_from_serial  : integer := 4;
-    constant stream_data_from_address                 : integer := 5;
-    constant request_stream_from_address              : integer := 6;
+    constant stream_data_from_address                   : integer := 5;
+    constant request_stream_from_address                : integer := 6;
 
     type base_array is array (natural range <>) of std_logic_vector(7 downto 0);
     subtype memory_array is base_array(0 to 7);
@@ -26,7 +30,6 @@ package serial_protocol_generic_pkg is
         transmit_buffer             : memory_array;
         is_ready                    : boolean;
         is_requested                : boolean;
-
         ------------------------------
         receive_buffer           : memory_array;
         receive_address          : integer range 0 to 7;
@@ -158,10 +161,10 @@ package body serial_protocol_generic_pkg is
             else
                 serial_protocol_header := get_serial_rx_data(serial_rx);
                 CASE serial_protocol_header is
-                    WHEN read_is_requested_from_address_from_serial => self.number_of_received_words <= 2;
-                    WHEN write_to_address_is_requested_from_serial  => self.number_of_received_words <= 4;
-                    WHEN stream_data_from_address                 => self.number_of_received_words <= 5;
-                    WHEN request_stream_from_address              => self.number_of_received_words <= 5;
+                    WHEN read_is_requested_from_address_from_serial => self.number_of_received_words <= g_data_bit_width/8;
+                    WHEN write_to_address_is_requested_from_serial  => self.number_of_received_words <= g_address_bit_width/8 + g_data_bit_width/8;
+                    WHEN stream_data_from_address                 => self.number_of_received_words <= g_address_bit_width/8 + 3;
+                    WHEN request_stream_from_address              => self.number_of_received_words <= g_address_bit_width/8 + 3;
                     WHEN others => self.number_of_received_words <= get_serial_rx_data(serial_rx) mod 8;
                 end CASE;
             end if;
