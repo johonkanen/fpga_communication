@@ -166,8 +166,8 @@ package body serial_protocol_generic_pkg is
                 CASE serial_protocol_header is
                     WHEN read_is_requested_from_address_from_serial => self.number_of_received_words <= g_data_bit_width/8;
                     WHEN write_to_address_is_requested_from_serial  => self.number_of_received_words <= g_address_bit_width/8 + g_data_bit_width/8;
-                    WHEN stream_data_from_address                 => self.number_of_received_words <= g_address_bit_width/8 + 3;
-                    WHEN request_stream_from_address              => self.number_of_received_words <= g_address_bit_width/8 + 3;
+                    WHEN stream_data_from_address                   => self.number_of_received_words <= g_address_bit_width/8 + 3;
+                    WHEN request_stream_from_address                => self.number_of_received_words <= g_address_bit_width/8 + 3;
                     WHEN others => self.number_of_received_words <= get_serial_rx_data(serial_rx) mod 8;
                 end CASE;
             end if;
