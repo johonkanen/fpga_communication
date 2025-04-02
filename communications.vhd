@@ -46,9 +46,9 @@ begin
         if rising_edge(clock) then
 
             init_bus(bus_out);
-            init_uart(uart_tx_data_in, g_clock_divider);
-            set_number_of_clocks_per_bit(uart_rx_data_in, g_clock_divider);
             create_serial_protocol(uart_protocol, uart_rx_data_out, uart_tx_data_in, uart_tx_data_out);
+            set_number_of_clocks_per_bit(uart_tx_data_in, g_clock_divider);
+            set_number_of_clocks_per_bit(uart_rx_data_in, g_clock_divider);
 
             ------------------------------------------------------------------------
             if frame_has_been_received(uart_protocol) then
