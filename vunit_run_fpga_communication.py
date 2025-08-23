@@ -13,7 +13,7 @@ lib.add_source_files(ROOT / "hVHDL_uart/uart_tx/uart_tx_pkg.vhd")
 lib.add_source_files(ROOT / "serial_protocol_generic_pkg.vhd")
 
 lib.add_source_files(ROOT / "hVHDL_fpga_interconnect/fpga_interconnect_generic_pkg.vhd")
-lib.add_source_files(ROOT / "fpga_interconnect_16bit_pkg.vhd")
+# lib.add_source_files(ROOT / "fpga_interconnect_16bit_pkg.vhd")
 
 lib.add_source_files(ROOT / "uart_protocol_pkg.vhd")
 lib.add_source_files(ROOT / "communications.vhd")

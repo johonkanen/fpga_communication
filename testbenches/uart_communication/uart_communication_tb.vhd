@@ -12,7 +12,11 @@ end;
 
 architecture vunit_simulation of uart_communication_tb is
 
-    use work.fpga_interconnect_pkg.all;
+    package fpga_interconnect_pkg is new work.fpga_interconnect_generic_pkg 
+        generic map(number_of_data_bits => 16,
+                 number_of_address_bits => 16);
+
+    use fpga_interconnect_pkg.all;
     use work.uart_rx_pkg.all;
     use work.uart_tx_pkg.all;
     use work.uart_protocol_pkg.all;
@@ -131,7 +135,7 @@ begin
     	  uart_tx_data_out => uart_tx_data_out);
 ------------------------------------------------------------------------
     communications_under_test : entity work.fpga_communications
-    generic map(fpga_interconnect_pkg => work.fpga_interconnect_pkg)
+    generic map(fpga_interconnect_pkg => fpga_interconnect_pkg)
         port map(
             clock => simulator_clock                              ,
             uart_rx                 => uart_tx               ,
