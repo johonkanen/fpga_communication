@@ -13,13 +13,16 @@ end;
 
 architecture vunit_simulation of uart_comm_32_bit_tb is
 
+    --------------------------------------
     use work.uart_rx_pkg.all;
     use work.uart_tx_pkg.all;
 
+    --------------------------------------
     package fpga_interconnect_pkg is new work.fpga_interconnect_generic_pkg 
         generic map(number_of_data_bits => 32,
                  number_of_address_bits => 16);
 
+    --------------------------------------
     package uart_protocol_pkg is new work.serial_protocol_generic_pkg
     generic map(serial_rx_data_output_record => uart_rx_data_output_group
                 ,serial_tx_data_input_record  => uart_tx_data_input_group
@@ -37,9 +40,9 @@ architecture vunit_simulation of uart_comm_32_bit_tb is
                 ,g_data_bit_width    => 32
                 ,g_address_bit_width => 16
             );
+    --------------------------------------
 
     use uart_protocol_pkg.all;
-
     use fpga_interconnect_pkg.all;
 
     package uart_protocol_test_pkg is new work.serial_protocol_generic_test_pkg
@@ -111,7 +114,7 @@ begin
             if transmit_is_ready(uart_protocol) or simulation_counter = 10 then
                 transmit_counter <= transmit_counter + 1;
                 if transmit_counter <= data_to_be_transmitted'high then
-                    transmit_words_with_serial(uart_protocol, write_frame(transmit_counter, data_to_be_transmitted(transmit_counter)));
+                    transmit_words_with_serial(uart_protocol, (0 => x"04", 1 => x"00", 2 => x"01", 3 => x"ac", 4 => x"dc", 5 => x"ab", 6 => x"ba"));
                 elsif transmit_counter <= data_to_be_transmitted'high+1 then
                     transmit_words_with_serial(uart_protocol, read_frame(address => 1));
                 end if;

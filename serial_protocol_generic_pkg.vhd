@@ -26,17 +26,18 @@ package serial_protocol_generic_pkg is
     constant number_of_data_bytes    : natural := g_data_bit_width/8;
 
     type base_array is array (natural range <>) of std_logic_vector(7 downto 0);
-    subtype memory_array is base_array(0 to 7);
+    constant bufferlength : natural := 8;
+    subtype memory_array is base_array(0 to bufferlength-1);
 
     type serial_communcation_record is record
-        number_of_transmitted_words : integer range 0 to 7;
+        number_of_transmitted_words : integer range 0 to bufferlength-1;
         transmit_buffer             : memory_array;
         is_ready                    : boolean;
         is_requested                : boolean;
         ------------------------------
         receive_buffer           : memory_array;
-        receive_address          : integer range 0 to 7;
-        number_of_received_words : integer range 0 to 7;
+        receive_address          : integer range 0 to bufferlength-1;
+        number_of_received_words : integer range 0 to bufferlength-1;
         receive_is_ready         : boolean;
         receive_timeout          : integer range 0 to 2**16-1;
     end record;
@@ -91,7 +92,7 @@ package serial_protocol_generic_pkg is
         return integer;
 ------------------------------------------------------------------------
     function get_command_data ( self : serial_communcation_record)
-        return integer;
+        return std_logic_vector;
 ------------------------------------------------------------------------
     function int24_to_bytes ( number : integer)
         return base_array;
@@ -133,7 +134,7 @@ package body serial_protocol_generic_pkg is
         if self.number_of_transmitted_words > 0 then
             if serial_tx_is_ready(serial_tx_out) or self.is_requested then
                 transmit_8bit_data_package(serial_tx_in, self.transmit_buffer(0));
-                self.transmit_buffer <= self.transmit_buffer(1 to 7) & x"00";
+                self.transmit_buffer <= self.transmit_buffer(1 to self.transmit_buffer'high) & x"00";
                 self.number_of_transmitted_words <= self.number_of_transmitted_words - 1;
             end if;
         else
@@ -324,14 +325,19 @@ package body serial_protocol_generic_pkg is
     (
         self : serial_communcation_record
     )
-    return integer
+    return std_logic_vector
     is
-        variable data : unsigned(g_data_bit_width-1 downto 0);
+        variable retval : std_logic_vector(g_data_bit_width-1 downto 0);
+        constant offset : natural := 1+ number_of_address_bytes;
     begin
-        for i in (1+ number_of_address_bytes) to (number_of_address_bytes + number_of_data_bytes) loop
-            -- for j in 
+
+        for i in offset to offset+number_of_data_bytes-1 loop
+            for j in 0 to 7 loop
+                retval(retval'left-8*(i-offset) downto retval'length-8*(i-offset+1)) := self.receive_buffer(i);
+            end loop;
         end loop;
-        return bytes_to_int(self.receive_buffer(1+ number_of_address_bytes to number_of_address_bytes + number_of_data_bytes));
+
+        return retval;
     end get_command_data;
 ------------------------------------------------------------------------
     function get_number_of_registers_to_stream

@@ -87,14 +87,15 @@ architecture vunit_simulation of uart_communication_tb is
     constant data_to_be_transmitted : std16_array :=(1 => x"acdc", 2 => x"abcd", 3=> x"1234", 4=>  x"1111", 5 => x"0101");
 
     type std8_array is array (natural range <>) of std_logic_vector(7 downto 0);
-    constant testiarray : std8_array(3 to 3+3) := (3 => x"ac" ,4 =>  x"dc",5 => x"12",6 => x"34");
+    constant testiarray : std8_array(3 to 3+4) := 
+        (3 => x"ac" ,4 =>  x"dc",5 => x"12",6 => x"34", 7 => x"56");
 
     function testi(number_of_bytes : natural; offset : natural) return unsigned is
         variable retval : std_logic_vector(number_of_bytes * 8-1 downto 0);
     begin
-        for i in offset to offset+3 loop
+        for i in offset to offset+number_of_bytes-1 loop
             for j in 0 to 7 loop
-                retval(retval'left-8*(i-3) downto retval'length-8*(i-2)) := testiarray(i);
+                retval(retval'left-8*(i-offset) downto retval'length-8*(i-offset+1)) := testiarray(i);
             end loop;
         end loop;
 
@@ -103,7 +104,6 @@ architecture vunit_simulation of uart_communication_tb is
     end testi;
 
     signal testisignaali : unsigned(31 downto 0) := testi(4, 3);
-
 
 begin
 
