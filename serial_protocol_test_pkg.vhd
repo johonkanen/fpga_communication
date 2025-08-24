@@ -36,7 +36,9 @@ package body serial_protocol_generic_test_pkg is
     return base_array
     is
         variable retval : base_array(0 to 4);
+
     begin
+
         retval(0) := std_logic_vector'(x"04");
         retval(1 to 2) := int_to_bytes(address);
         retval(3 to 4) := (data(15 downto 8), data(7 downto 0));

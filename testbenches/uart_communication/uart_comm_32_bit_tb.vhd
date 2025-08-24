@@ -103,6 +103,29 @@ begin
 ------------------------------------------------------------------------
 
     test_uart : process(simulator_clock)
+    function write_32bit_frame
+    (
+        address : natural;
+        data : std_logic_vector
+    )
+    return base_array
+    is
+        variable retval : base_array(0 to 6);
+
+    begin
+
+        retval(0) := std_logic_vector'(x"04");
+        retval(1 to 2) := int_to_bytes(address);
+        retval(3 to 6) := (
+            data(31 downto 24)
+            ,data(23 downto 16)
+            ,data(15 downto 8)
+            ,data(7 downto 0)
+        );
+
+        return retval;
+    end write_32bit_frame;
+
     begin
         if rising_edge(simulator_clock) then
             simulation_counter <= simulation_counter + 1;
@@ -114,7 +137,7 @@ begin
             if transmit_is_ready(uart_protocol) or simulation_counter = 10 then
                 transmit_counter <= transmit_counter + 1;
                 if transmit_counter <= data_to_be_transmitted'high then
-                    transmit_words_with_serial(uart_protocol, (0 => x"04", 1 => x"00", 2 => x"01", 3 => x"ac", 4 => x"dc", 5 => x"ab", 6 => x"ba"));
+                    transmit_words_with_serial(uart_protocol, write_32bit_frame(transmit_counter, data_to_be_transmitted(transmit_counter)));
                 elsif transmit_counter <= data_to_be_transmitted'high+1 then
                     transmit_words_with_serial(uart_protocol, read_frame(address => 1));
                 end if;
