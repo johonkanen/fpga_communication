@@ -1,3 +1,4 @@
+
 LIBRARY ieee  ; 
     USE ieee.NUMERIC_STD.all  ; 
     USE ieee.std_logic_1164.all  ; 
@@ -6,14 +7,14 @@ LIBRARY ieee  ;
 library vunit_lib;
 context vunit_lib.vunit_context;
 
-entity uart_communication_tb is
+entity uart_comm_32_bit_tb is
   generic (runner_cfg : string);
 end;
 
-architecture vunit_simulation of uart_communication_tb is
+architecture vunit_simulation of uart_comm_32_bit_tb is
 
     package fpga_interconnect_pkg is new work.fpga_interconnect_generic_pkg 
-        generic map(number_of_data_bits => 16,
+        generic map(number_of_data_bits => 32,
                  number_of_address_bits => 16);
 
     use fpga_interconnect_pkg.all;
@@ -37,33 +38,31 @@ architecture vunit_simulation of uart_communication_tb is
     signal uart_rx_data_in  : uart_rx_data_input_group := (number_of_clocks_per_bit => 24);
     signal uart_rx_data_out : uart_rx_data_output_group;
 
-    signal uart_tx_data_in    : uart_tx_data_input_group := init_uart_tx(24);
-    signal uart_tx_data_out   : uart_tx_data_output_group;
-    signal uart_protocol : serial_communcation_record := init_serial_communcation;
+    signal uart_tx_data_in  : uart_tx_data_input_group   := init_uart_tx(24);
+    signal uart_tx_data_out : uart_tx_data_output_group;
+    signal uart_protocol    : serial_communcation_record := init_serial_communcation;
 
     signal number_of_registers_to_stream : integer range 0 to 2**23-1 := 0;
     signal stream_address : integer range 0 to 2**16-1 := 0;
 
     signal fpga_controlled_stream_requested : boolean := false;
 
-    signal bus_to_communications : fpga_interconnect_record := init_fpga_interconnect;
+    signal bus_to_communications   : fpga_interconnect_record := init_fpga_interconnect;
     signal bus_from_communications : fpga_interconnect_record := init_fpga_interconnect;
 
-
     constant g_clock_divider : integer := 24;
-
 
     signal uart_rx : std_logic := '1';
     signal uart_tx : std_logic;
 
-    type std16_array is array (natural range <>) of std_logic_vector(15 downto 0);
-    signal test_data : std16_array(1 to 5) := (others => (others => '1'));
+    type std32_array is array (natural range <>) of std_logic_vector(31 downto 0);
+    signal test_data : std32_array(1 to 5) := (others => (others => '1'));
 
-    signal tuitui : std_logic_vector(15 downto 0) := (others => '0');
+    signal tuitui : std_logic_vector(31 downto 0) := (others => '0');
 
     signal transmit_counter : natural := 1;
 
-    constant data_to_be_transmitted : std16_array :=(1 => x"acdc", 2 => x"abcd", 3=> x"1234", 4=>  x"1111", 5 => x"0101");
+    constant data_to_be_transmitted : std32_array :=(1 => x"acdcacdc", 2 => x"abcdabcd", 3=> x"12341234", 4=>  x"11111111", 5 => x"01010101");
 
 begin
 
@@ -89,9 +88,6 @@ begin
             set_number_of_clocks_per_bit(uart_rx_data_in, g_clock_divider);
             create_serial_protocol(uart_protocol, uart_rx_data_out, uart_tx_data_in, uart_tx_data_out);
 
-            if simulation_counter = 10 then
-            end if;
-
             if transmit_is_ready(uart_protocol) or simulation_counter = 10 then
                 transmit_counter <= transmit_counter + 1;
                 if transmit_counter <= data_to_be_transmitted'high then
@@ -100,6 +96,7 @@ begin
                     transmit_words_with_serial(uart_protocol, read_frame(address => 1));
                 end if;
             end if;
+
             if frame_has_been_received(uart_protocol) then
                 if get_command(uart_protocol) = 2 then
                     transmit_words_with_serial(uart_protocol,write_frame(get_command_address(uart_protocol), test_data(3)));
@@ -135,15 +132,13 @@ begin
     	  uart_tx_data_out => uart_tx_data_out);
 ------------------------------------------------------------------------
     communications_under_test : entity work.fpga_communications
-    generic map(fpga_interconnect_pkg => fpga_interconnect_pkg
-                -- , serial_protocol_pkg => work.uart_protocol_pkg)
-               )
+    generic map(fpga_interconnect_pkg => fpga_interconnect_pkg)
         port map(
-            clock => simulator_clock                         
-            ,uart_rx                 => uart_tx               
-            ,uart_tx                 => uart_rx               
-            ,bus_to_communications   => bus_to_communications 
-            ,bus_from_communications => bus_from_communications
+            clock => simulator_clock                              ,
+            uart_rx                 => uart_tx               ,
+            uart_tx                 => uart_rx               ,
+            bus_to_communications   => bus_to_communications ,
+            bus_from_communications => bus_from_communications
         );
 ------------------------------------------------------------------------
 end vunit_simulation;

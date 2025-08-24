@@ -13,8 +13,8 @@ package serial_protocol_generic_pkg is
               ; procedure transmit_8bit_data_package(signal self : out serial_tx_data_input_record ; input : std_logic_vector) is <>
               ; function serial_tx_is_ready(self : serial_tx_data_output_record) return boolean is <>
              --------------------------------
-           ; constant g_data_bit_width    : natural := 16
-           ; constant g_address_bit_width : natural := 16
+           ; constant g_data_bit_width    : natural
+           ; constant g_address_bit_width : natural
          );
 
     constant read_is_requested_from_address_from_serial : integer := 2;
@@ -327,7 +327,7 @@ package body serial_protocol_generic_pkg is
     return integer
     is
     begin
-        return bytes_to_int(self.receive_buffer(3 to 4));
+        return bytes_to_int(self.receive_buffer(1+ number_of_address_bytes to number_of_address_bytes + number_of_data_bytes));
     end get_command_data;
 ------------------------------------------------------------------------
     function get_number_of_registers_to_stream

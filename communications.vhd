@@ -7,7 +7,8 @@ library ieee;
     use work.uart_tx_pkg.all;
 
 entity fpga_communications is
-    generic(package fpga_interconnect_pkg is new work.fpga_interconnect_generic_pkg generic map(<>);
+    generic(
+            package fpga_interconnect_pkg is new work.fpga_interconnect_generic_pkg generic map(<>);
             g_clock_divider : natural := 24);
 
     port (
@@ -28,9 +29,9 @@ architecture rtl of fpga_communications is
     signal uart_rx_data_in  : uart_rx_data_input_group;
     signal uart_rx_data_out : uart_rx_data_output_group;
 
-    signal uart_tx_data_in    : uart_tx_data_input_group;
-    signal uart_tx_data_out   : uart_tx_data_output_group;
-    signal uart_protocol : serial_communcation_record := init_serial_communcation;
+    signal uart_tx_data_in  : uart_tx_data_input_group;
+    signal uart_tx_data_out : uart_tx_data_output_group;
+    signal uart_protocol    : serial_communcation_record := init_serial_communcation;
 
     signal number_of_registers_to_stream : integer range 0 to 2**23-1 := 0;
     signal stream_address : integer range 0 to 2**16-1 := 0;
