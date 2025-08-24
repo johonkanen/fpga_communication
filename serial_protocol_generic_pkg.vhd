@@ -328,6 +328,9 @@ package body serial_protocol_generic_pkg is
     is
         variable data : unsigned(g_data_bit_width-1 downto 0);
     begin
+        for i in (1+ number_of_address_bytes) to (number_of_address_bytes + number_of_data_bytes) loop
+            -- for j in 
+        end loop;
         return bytes_to_int(self.receive_buffer(1+ number_of_address_bytes to number_of_address_bytes + number_of_data_bytes));
     end get_command_data;
 ------------------------------------------------------------------------
