@@ -79,13 +79,22 @@ architecture vunit_simulation of uart_comm_32_bit_tb is
     signal uart_tx : std_logic;
 
     type std32_array is array (natural range <>) of std_logic_vector(31 downto 0);
-    signal test_data : std32_array(1 to 5) := (others => (others => '1'));
+    signal test_data : std32_array(1 to 6) := (others => (others => '1'));
 
     signal tuitui : std_logic_vector(31 downto 0) := (others => '0');
 
     signal transmit_counter : natural := 1;
 
-    constant data_to_be_transmitted : std32_array :=(1 => x"acdcacdc", 2 => x"abcdabcd", 3=> x"12341234", 4=>  x"11111111", 5 => x"01010101");
+    constant data_to_be_transmitted : std32_array :=(
+          1 => x"acdcacdc"
+        , 2 => x"abcdabcd"
+        , 3 => x"12341234"
+        , 4 => x"11111111"
+        , 5 => x"01010101"
+        , 6 => x"55555555"
+    );
+
+    signal test_data16bits : std_logic_vector(15 downto 0) := x"0000";
 
 begin
 
@@ -117,10 +126,10 @@ begin
         retval(0) := std_logic_vector'(x"04");
         retval(1 to 2) := int_to_bytes(address);
         retval(3 to 6) := (
-            data(31 downto 24)
+            data(31  downto 24)
             ,data(23 downto 16)
             ,data(15 downto 8)
-            ,data(7 downto 0)
+            ,data(7  downto 0)
         );
 
         return retval;
@@ -145,13 +154,13 @@ begin
 
             if frame_has_been_received(uart_protocol) then
                 if get_command(uart_protocol) = 2 then
-                    transmit_words_with_serial(uart_protocol,write_frame(get_command_address(uart_protocol), test_data(3)));
+                    -- transmit_words_with_serial(uart_protocol,write_frame(get_command_address(uart_protocol), data_to_be_transmitted(3)));
                 end if;
             end if;
 
-            if simulation_counter = 8500 then
-                    transmit_words_with_serial(uart_protocol,stream_frame(5));
-            end if;
+            -- if simulation_counter = 11e3 then
+            --         transmit_words_with_serial(uart_protocol,stream_frame(5));
+            -- end if;
 
 
             init_bus(bus_to_communications);
@@ -160,7 +169,10 @@ begin
             connect_data_to_address(bus_from_communications, bus_to_communications, 3, test_data(3));
             connect_data_to_address(bus_from_communications, bus_to_communications, 4, test_data(4));
             connect_data_to_address(bus_from_communications, bus_to_communications, 5, test_data(5));
+            connect_data_to_address(bus_from_communications, bus_to_communications, 6, test_data(6));
+
             connect_data_to_address(bus_from_communications, bus_to_communications, 5, tuitui);
+            connect_data_to_address(bus_from_communications, bus_to_communications, 7, test_data16bits);
 
         end if; -- rising_edge
     end process test_uart;	
@@ -179,14 +191,13 @@ begin
 ------------------------------------------------------------------------
     communications_under_test : entity work.fpga_communications
     generic map(fpga_interconnect_pkg => fpga_interconnect_pkg
-                -- , serial_protocol_pkg => work.uart_protocol_pkg)
                )
         port map(
-            clock => simulator_clock                         ,
-            uart_rx                 => uart_tx               ,
-            uart_tx                 => uart_rx               ,
-            bus_to_communications   => bus_to_communications ,
-            bus_from_communications => bus_from_communications
+            clock => simulator_clock                         
+            ,uart_rx                 => uart_tx               
+            ,uart_tx                 => uart_rx               
+            ,bus_to_communications   => bus_to_communications 
+            ,bus_from_communications => bus_from_communications
         );
 ------------------------------------------------------------------------
 end vunit_simulation;

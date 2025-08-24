@@ -76,7 +76,7 @@ package serial_protocol_generic_pkg is
     function transmit_is_ready ( self : serial_communcation_record)
         return boolean;
 ------------------------------------------------------------------------
-    function write_data_to_register ( address : integer; data : integer)
+    function write_data_to_register ( address : integer; data : std_logic_vector)
         return base_array;
 ------------------------------------------------------------------------
     function read_data_from_register ( address : integer)
@@ -165,10 +165,10 @@ package body serial_protocol_generic_pkg is
             else
                 serial_protocol_header := get_serial_rx_data(serial_rx);
                 CASE serial_protocol_header is
-                    WHEN read_is_requested_from_address_from_serial => self.number_of_received_words <= g_data_bit_width/8;
+                    WHEN read_is_requested_from_address_from_serial => self.number_of_received_words <= g_address_bit_width/8;
                     WHEN write_to_address_is_requested_from_serial  => self.number_of_received_words <= g_address_bit_width/8 + g_data_bit_width/8;
-                    WHEN stream_data_from_address                   => self.number_of_received_words <= g_address_bit_width/8 + 3;
-                    WHEN request_stream_from_address                => self.number_of_received_words <= g_address_bit_width/8 + 3;
+                    WHEN stream_data_from_address                   => self.number_of_received_words <= g_address_bit_width/8 + g_data_bit_width/8;
+                    WHEN request_stream_from_address                => self.number_of_received_words <= g_address_bit_width/8 + g_data_bit_width/8;
                     WHEN others => self.number_of_received_words <= get_serial_rx_data(serial_rx) mod 8;
                 end CASE;
             end if;
@@ -209,6 +209,7 @@ package body serial_protocol_generic_pkg is
         for i in 1 to data_words_in'high+1 loop
             self.transmit_buffer(i) <= data_words_in(i-1);
         end loop;
+
         self.is_requested <= true;
     end respond_to_data_request;
         
@@ -280,15 +281,25 @@ package body serial_protocol_generic_pkg is
     end int24_to_bytes;
 ------------------------------------------------------------------------
 ------------------------------------------------------------------------
+    -- TODO fix with 32 bits
     function write_data_to_register
     (
         address : integer;
-        data : integer
+        data : std_logic_vector
     )
     return base_array
     is
+        variable retval : base_array(0 to g_address_bit_width/8 + g_data_bit_width/8-1);
+        constant offset : natural := g_address_bit_width;
+        constant written_data : unsigned(g_address_bit_width + g_data_bit_width-1 downto 0)
+            := to_unsigned(address, g_address_bit_width) & unsigned(data);
     begin
-        return int_to_bytes(address) & int_to_bytes(data);
+
+        for i in written_data'high downto 0 loop
+            retval(retval'high - i/8)(i mod 8) := written_data(i);
+        end loop;
+
+        return retval;
     end write_data_to_register;
 ------------------------------------------------------------------------
     function read_data_from_register
