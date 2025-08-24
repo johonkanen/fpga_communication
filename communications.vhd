@@ -2,15 +2,11 @@ library ieee;
     use ieee.std_logic_1164.all;
     use ieee.numeric_std.all;
 
-    use work.uart_protocol_pkg.all;
-    use work.uart_rx_pkg.all;
-    use work.uart_tx_pkg.all;
-
 entity fpga_communications is
     generic(
-            package fpga_interconnect_pkg is new work.fpga_interconnect_generic_pkg generic map(<>);
-            g_clock_divider : natural := 24);
-
+                package fpga_interconnect_pkg is new work.fpga_interconnect_generic_pkg generic map(<>)
+                ;g_clock_divider : natural := 24
+            );
     port (
         clock : in std_logic;
         uart_rx : in std_logic;
@@ -21,8 +17,30 @@ entity fpga_communications is
 end entity fpga_communications;
 
 architecture rtl of fpga_communications is
-
+    
+    use work.uart_rx_pkg.all;
+    use work.uart_tx_pkg.all;
     use fpga_interconnect_pkg.all;
+
+    package uart_protocol_pkg is new work.serial_protocol_generic_pkg
+    generic map(serial_rx_data_output_record => uart_rx_data_output_group
+                ,serial_tx_data_input_record  => uart_tx_data_input_group
+                ,serial_tx_data_output_record => uart_tx_data_output_group
+                --------------------------------
+                ,serial_rx_data_is_ready => uart_rx_data_is_ready
+                --------------------------------
+                ,get_serial_rx_data => get_uart_rx_data
+                --------------------------------
+                ,init_serial => init_uart
+                --------------------------------
+                ,transmit_8bit_data_package => transmit_8bit_data_package
+                --------------------------------
+                ,serial_tx_is_ready  => uart_tx_is_ready
+                ,g_data_bit_width    => bus_to_communications.data'length
+                ,g_address_bit_width => bus_to_communications.address'length
+            );
+
+    use uart_protocol_pkg.all;
     alias bus_in  is bus_to_communications;
     alias bus_out is bus_from_communications;
 
@@ -99,15 +117,15 @@ begin
     end process test_uart;	
 ------------------------------------------------------------------------
     u_uart_rx : entity work.uart_rx
-    port map(clock => clock   ,
-          uart_rx_FPGA_in.uart_rx => uart_rx ,
-    	  uart_rx_data_in  => uart_rx_data_in     ,
-    	  uart_rx_data_out => uart_rx_data_out); 
+    port map(clock => clock                    
+        ,uart_rx_FPGA_in.uart_rx => uart_rx         
+        ,uart_rx_data_in         => uart_rx_data_in 
+        ,uart_rx_data_out        => uart_rx_data_out);
 ------------------------------------------------------------------------
     u_uart_tx : entity work.uart_tx
-        port map(clock => clock               ,
-          uart_tx_fpga_out.uart_tx => uart_tx ,
-    	  uart_tx_data_in => uart_tx_data_in  ,
-    	  uart_tx_data_out => uart_tx_data_out);
+        port map(clock => clock                     
+        ,uart_tx_fpga_out.uart_tx => uart_tx         
+        ,uart_tx_data_in          => uart_tx_data_in 
+        ,uart_tx_data_out         => uart_tx_data_out);
 ------------------------------------------------------------------------
 end rtl;

@@ -13,17 +13,37 @@ end;
 
 architecture vunit_simulation of uart_comm_32_bit_tb is
 
+    use work.uart_rx_pkg.all;
+    use work.uart_tx_pkg.all;
+
     package fpga_interconnect_pkg is new work.fpga_interconnect_generic_pkg 
         generic map(number_of_data_bits => 32,
                  number_of_address_bits => 16);
 
+    package uart_protocol_pkg is new work.serial_protocol_generic_pkg
+    generic map(serial_rx_data_output_record => uart_rx_data_output_group
+                ,serial_tx_data_input_record  => uart_tx_data_input_group
+                ,serial_tx_data_output_record => uart_tx_data_output_group
+                --------------------------------
+                ,serial_rx_data_is_ready => uart_rx_data_is_ready
+                --------------------------------
+                ,get_serial_rx_data => get_uart_rx_data
+                --------------------------------
+                ,init_serial => init_uart
+                --------------------------------
+                ,transmit_8bit_data_package => transmit_8bit_data_package
+                --------------------------------
+                ,serial_tx_is_ready  => uart_tx_is_ready
+                ,g_data_bit_width    => 32
+                ,g_address_bit_width => 16
+            );
+
+    use uart_protocol_pkg.all;
+
     use fpga_interconnect_pkg.all;
-    use work.uart_rx_pkg.all;
-    use work.uart_tx_pkg.all;
-    use work.uart_protocol_pkg.all;
 
     package uart_protocol_test_pkg is new work.serial_protocol_generic_test_pkg
-        generic map(work.uart_protocol_pkg);
+        generic map(uart_protocol_pkg);
 
     use uart_protocol_test_pkg.all;
 
@@ -132,9 +152,11 @@ begin
     	  uart_tx_data_out => uart_tx_data_out);
 ------------------------------------------------------------------------
     communications_under_test : entity work.fpga_communications
-    generic map(fpga_interconnect_pkg => fpga_interconnect_pkg)
+    generic map(fpga_interconnect_pkg => fpga_interconnect_pkg
+                -- , serial_protocol_pkg => work.uart_protocol_pkg)
+               )
         port map(
-            clock => simulator_clock                              ,
+            clock => simulator_clock                         ,
             uart_rx                 => uart_tx               ,
             uart_tx                 => uart_rx               ,
             bus_to_communications   => bus_to_communications ,
