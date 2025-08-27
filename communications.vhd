@@ -55,6 +55,7 @@ architecture rtl of fpga_communications is
     signal stream_address : integer range 0 to 2**16-1 := 0;
 
     signal fpga_controlled_stream_requested : boolean := false;
+    signal read_was_received : boolean := false;
 
 begin
 
@@ -70,10 +71,12 @@ begin
             set_number_of_clocks_per_bit(uart_rx_data_in, g_clock_divider);
 
             ------------------------------------------------------------------------
+                        read_was_received <= false;
             if frame_has_been_received(uart_protocol) then
                 CASE get_command(uart_protocol) is
                     WHEN read_is_requested_from_address_from_serial =>
                         request_data_from_address(bus_out, get_command_address(uart_protocol));
+                        read_was_received <= true;
 
                     WHEN write_to_address_is_requested_from_serial =>
                         write_data_to_address(bus_out, get_command_address(uart_protocol), get_command_data(uart_protocol));

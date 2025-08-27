@@ -51,7 +51,7 @@ architecture vunit_simulation of uart_comm_32_bit_tb is
     use uart_protocol_test_pkg.all;
 
     constant clock_period      : time    := 1 ns;
-    constant simtime_in_clocks : integer := 15000;
+    constant simtime_in_clocks : integer := 17000;
     
     signal simulator_clock     : std_logic := '0';
     signal simulation_counter  : natural   := 0;
@@ -94,7 +94,8 @@ architecture vunit_simulation of uart_comm_32_bit_tb is
         , 6 => x"55555555"
     );
 
-    signal test_data16bits : std_logic_vector(15 downto 0) := x"0000";
+    signal test_data16bits : std_logic_vector(15 downto 0) := x"5678";
+    signal response_was_received : boolean := false;
 
 begin
 
@@ -104,6 +105,7 @@ begin
         test_runner_setup(runner, runner_cfg);
         wait for simtime_in_clocks*clock_period;
         check(data_to_be_transmitted = test_data, "words were not the same");
+        check(response_was_received, "did not receive a response");
         test_runner_cleanup(runner); -- Simulation ends here
         wait;
     end process simtime;	
@@ -148,14 +150,16 @@ begin
                 if transmit_counter <= data_to_be_transmitted'high then
                     transmit_words_with_serial(uart_protocol, write_32bit_frame(transmit_counter, data_to_be_transmitted(transmit_counter)));
                 elsif transmit_counter <= data_to_be_transmitted'high+1 then
-                    transmit_words_with_serial(uart_protocol, read_frame(address => 1));
+                    transmit_words_with_serial(uart_protocol, read_frame(address => 7));
                 end if;
             end if;
 
             if frame_has_been_received(uart_protocol) then
-                if get_command(uart_protocol) = 2 then
-                    -- transmit_words_with_serial(uart_protocol,write_frame(get_command_address(uart_protocol), data_to_be_transmitted(3)));
-                end if;
+                CASE get_command(uart_protocol) is
+                    WHEN write_to_address_is_requested_from_serial =>
+                        transmit_words_with_serial(uart_protocol,write_frame(get_command_address(uart_protocol), data_to_be_transmitted(3)));
+                    WHEN others => -- do nothing
+                end CASE;
             end if;
 
             -- if simulation_counter = 11e3 then
@@ -178,16 +182,16 @@ begin
     end process test_uart;	
 ------------------------------------------------------------------------
     u_uart_rx : entity work.uart_rx
-    port map(clock => simulator_clock   ,
-          uart_rx_FPGA_in.uart_rx => uart_rx ,
-    	  uart_rx_data_in  => uart_rx_data_in     ,
-    	  uart_rx_data_out => uart_rx_data_out); 
+    port map(clock => simulator_clock  
+        ,uart_rx_FPGA_in.uart_rx => uart_rx 
+        ,uart_rx_data_in  => uart_rx_data_in
+        ,uart_rx_data_out => uart_rx_data_out); 
 ------------------------------------------------------------------------
     u_uart_tx : entity work.uart_tx
-        port map(clock => simulator_clock               ,
-          uart_tx_fpga_out.uart_tx => uart_tx ,
-    	  uart_tx_data_in => uart_tx_data_in  ,
-    	  uart_tx_data_out => uart_tx_data_out);
+        port map(clock => simulator_clock   
+        ,uart_tx_fpga_out.uart_tx => uart_tx 
+        ,uart_tx_data_in => uart_tx_data_in  
+    	,uart_tx_data_out => uart_tx_data_out);
 ------------------------------------------------------------------------
     communications_under_test : entity work.fpga_communications
     generic map(fpga_interconnect_pkg => fpga_interconnect_pkg
