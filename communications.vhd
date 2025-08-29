@@ -105,14 +105,17 @@ begin
 
                 if write_to_address_is_requested(bus_in, 0) then
                     number_of_registers_to_stream <= number_of_registers_to_stream - 1;
-                    send_stream_data_packet(uart_protocol, get_data(bus_in));
+                    send_stream_data_packet(uart_protocol, get_slv_data(bus_in));
                     if number_of_registers_to_stream = 1 then
                         fpga_controlled_stream_requested <= false;
                     end if;
                 end if;
             else
                 if write_to_address_is_requested(bus_in, 0) then
-                    respond_to_data_request(uart_protocol, write_data_to_register(address => 0, data => get_slv_data(bus_in)));
+                    respond_to_data_request(uart_protocol
+                    , write_data_to_register(address => 0
+                    , data => get_slv_data(bus_in))
+                );
                 end if;
             end if;
             

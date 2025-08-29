@@ -71,7 +71,7 @@ package serial_protocol_generic_pkg is
 ------------------------------------------------------------------------
     procedure send_stream_data_packet (
         signal self : out serial_communcation_record;
-        data_in : integer);
+        data_in : std_logic_vector);
 ------------------------------------------------------------------------
     function transmit_is_ready ( self : serial_communcation_record)
         return boolean;
@@ -281,7 +281,6 @@ package body serial_protocol_generic_pkg is
     end int24_to_bytes;
 ------------------------------------------------------------------------
 ------------------------------------------------------------------------
-    -- TODO fix with 32 bits
     function write_data_to_register
     (
         address : integer;
@@ -290,7 +289,6 @@ package body serial_protocol_generic_pkg is
     return base_array
     is
         variable retval : base_array(0 to g_address_bit_width/8 + g_data_bit_width/8-1);
-        constant offset : natural := g_address_bit_width;
         constant written_data : unsigned(g_address_bit_width + g_data_bit_width-1 downto 0)
             := to_unsigned(address, g_address_bit_width) & unsigned(data);
     begin
@@ -376,10 +374,16 @@ package body serial_protocol_generic_pkg is
     procedure send_stream_data_packet
     (
         signal self : out serial_communcation_record;
-        data_in : integer
+        data_in : std_logic_vector
     ) is
+        variable retval : base_array(0 to g_data_bit_width/8-1);
+        constant written_data : unsigned(g_data_bit_width-1 downto 0)
+            := unsigned(data_in);
     begin
-        send_stream_data_packet(self, int_to_bytes(data_in));
+        for i in written_data'high downto 0 loop
+            retval(retval'high - i/8)(i mod 8) := written_data(i);
+        end loop;
+        send_stream_data_packet(self, retval);
         
     end send_stream_data_packet;
 ------------------------------------------------------------------------
