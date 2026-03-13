@@ -178,6 +178,9 @@ begin
             connect_data_to_address(bus_from_communications, bus_to_communications, 5, tuitui);
             connect_data_to_address(bus_from_communications, bus_to_communications, 7, test_data16bits);
 
+            response_was_received <= response_was_received or frame_has_been_received(uart_protocol);
+
+
         end if; -- rising_edge
     end process test_uart;	
 ------------------------------------------------------------------------
