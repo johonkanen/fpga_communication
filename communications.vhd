@@ -44,7 +44,7 @@ architecture rtl of fpga_communications is
     alias bus_in  is bus_to_communications;
     alias bus_out is bus_from_communications;
 
-    signal uart_rx_data_in  : uart_rx_data_input_group;
+    signal uart_rx_data_in  : uart_rx_data_input_group := (number_of_clocks_per_bit => g_clock_divider);
     signal uart_rx_data_out : uart_rx_data_output_group;
 
     signal uart_tx_data_in  : uart_tx_data_input_group;
