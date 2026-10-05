@@ -170,6 +170,10 @@ package body serial_protocol_generic_pkg is
                     WHEN stream_data_from_address                   => self.number_of_received_words <= g_address_bit_width/8 + 3;
                     WHEN request_stream_from_address                => self.number_of_received_words <= g_address_bit_width/8 + 3;
                     WHEN others => self.number_of_received_words <= get_serial_rx_data(serial_rx) mod 8;
+                        -- a header without payload, like padding zeros, is dropped so that the next frame starts from address 0
+                        if get_serial_rx_data(serial_rx) mod 8 = 0 then
+                            self.receive_address <= 0;
+                        end if;
                 end CASE;
             end if;
 
