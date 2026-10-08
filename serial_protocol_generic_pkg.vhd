@@ -27,6 +27,9 @@ package serial_protocol_generic_pkg is
 
     type base_array is array (natural range <>) of std_logic_vector(7 downto 0);
     constant bufferlength : natural := 8;
+    -- a partially received frame is dropped after this many clocks without a new byte,
+    -- long enough for USB serial adapters that split a frame into several transfers
+    constant receive_timeout_clocks : natural := 2**24-1;
     subtype memory_array is base_array(0 to bufferlength-1);
 
     type serial_communcation_record is record
@@ -39,7 +42,7 @@ package serial_protocol_generic_pkg is
         receive_address          : integer range 0 to bufferlength-1;
         number_of_received_words : integer range 0 to bufferlength-1;
         receive_is_ready         : boolean;
-        receive_timeout          : integer range 0 to 2**16-1;
+        receive_timeout          : integer range 0 to receive_timeout_clocks;
     end record;
 
     constant init_serial_communcation : serial_communcation_record := (0, (others => x"00"), false, false, (others => x"00"), 0,0, false, 0);
@@ -156,7 +159,7 @@ package body serial_protocol_generic_pkg is
         end if;
 
         if serial_rx_data_is_ready(serial_rx) then
-            self.receive_timeout <= 65535;
+            self.receive_timeout <= receive_timeout_clocks;
             self.receive_buffer(self.receive_address) <= get_serial_rx_data(serial_rx);
             self.receive_address <= (self.receive_address + 1) mod 8;
 
