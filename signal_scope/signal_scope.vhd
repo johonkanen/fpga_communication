@@ -62,8 +62,8 @@ architecture rtl of signal_scope is
         end if;
         
         if data_is_requested_from_address(bus_in, g_data_address) then
+            request_data_from_ram(ram_port_in_a, get_next_sample_address(trigger));
             calculate_read_address(trigger);
-            request_data_from_ram(ram_port_in_a, get_sample_address(trigger));
         end if;
 
         if ram_read_is_ready(ram_port_out_a) then
