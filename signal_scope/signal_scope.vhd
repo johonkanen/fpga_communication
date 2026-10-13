@@ -23,16 +23,15 @@ end entity signal_scope;
 architecture rtl of signal_scope is
 
     use work.fpga_interconnect_pkg.all;
+    use work.dual_port_ram_pkg.all;
 
-    package scope_ram_port_pkg is new work.ram_port_generic_pkg 
-        generic map(
-            g_ram_bit_width    => g_ram_bit_width
-            , g_ram_depth_pow2 => g_ram_depth_pow2);
+    constant ram_depth : natural := 2**g_ram_depth_pow2;
+    constant ram_subtype : dpram_ref_record := create_ref_subtypes(datawidth => g_ram_bit_width, addresswidth => g_ram_depth_pow2);
+    constant ram_init_values : ram_array(0 to ram_depth-1)(g_ram_bit_width-1 downto 0) := (others => (others => '1'));
 
     package scope_sample_trigger_pkg is new work.sample_trigger_generic_pkg 
-        generic map(g_ram_depth => scope_ram_port_pkg.ram_depth);
+        generic map(g_ram_depth => ram_depth);
 
-    use scope_ram_port_pkg.all;
     use scope_sample_trigger_pkg.all;
 
     signal samples_after_trigger : natural range 0 to ram_depth-1 := ram_depth/2;
@@ -74,11 +73,11 @@ architecture rtl of signal_scope is
 
     signal sample_trigger : sample_trigger_record := init_trigger;
 
-    signal ram_a_in  : ram_in_record;
-    signal ram_a_out : ram_out_record;
+    signal ram_a_in  : ram_subtype.ram_in'subtype;
+    signal ram_a_out : ram_subtype.ram_out'subtype;
     --------------------
-    signal ram_b_in  : ram_in_record;
-    signal ram_b_out : ram_out_record;
+    signal ram_b_in  : ram_subtype.ram_in'subtype;
+    signal ram_b_out : ram_subtype.ram_out'subtype;
 
 begin
 
@@ -105,8 +104,8 @@ begin
         end if;
     end process;
 
-    u_dpram : entity work.generic_dual_port_ram
-    generic map(scope_ram_port_pkg)
+    u_dpram : entity work.dual_port_ram
+    generic map(g_dpram_subtype => ram_subtype, g_ram_init_values => ram_init_values)
     port map(
     main_clock ,
     ram_a_in   ,
